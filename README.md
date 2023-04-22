@@ -17,10 +17,12 @@
   ```
   python run.py -d MAME_ROMs_253.dat -r roms/neogeo
   ```
+- A new feature added: if you place ```neogeo.zip``` in the root directory and the roms directory name contains the string ```neogeo``` the neogeo bios will be copied into the sub folder which is required to run the neo-geo games 
 
 ### Example output
 - As you can see, a folder is generated with the game name that will be shown in miniUI game list along with m3u and origin zipped rom file
 
-  ![image](https://user-images.githubusercontent.com/1568391/233762894-014c3567-fcf7-4f88-891f-9121371c0eca.png)
+![img.png](img.png)
+
 
 ### Please contact me for any bugs.

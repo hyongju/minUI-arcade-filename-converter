@@ -16,6 +16,7 @@ import shutil
 def main(argv):
     mame_dat_file_name = ''
     game_folder_name = ''
+
     opts, args = getopt.getopt(argv, "hd:r:", ["datfilename=", "romfoldername="])
     for opt, arg in opts:
         if opt == '-h':
@@ -27,7 +28,12 @@ def main(argv):
             game_folder_name = arg
     print('MAME DAT filename is ', mame_dat_file_name)
     print('Rom folder name is ', game_folder_name)
-
+    is_neogeo = False
+    has_neogeo_bios = False
+    if 'neogeo' in game_folder_name:
+        is_neogeo = True
+    neogeo_bios_name = 'neogeo.zip'
+    has_neogeo_bios = os.path.isfile(neogeo_bios_name)
     tree = ET.parse(mame_dat_file_name)
     root = tree.getroot()
     game_list = []
@@ -65,7 +71,8 @@ def main(argv):
                 os.mkdir(f'{game_folder_name}/{dst_name}')
                 dst_path = f"{game_folder_name}/{dst_name}/{filename}"
                 shutil.move(src, dst_path)
-
+                if is_neogeo and has_neogeo_bios:
+                    shutil.copy(neogeo_bios_name,f"{game_folder_name}/{dst_name}/{neogeo_bios_name}")
                 f = open(f"{game_folder_name}/{dst_name}/{dst_name}.m3u", "w+")
                 f.write(filename)
                 f.close()
