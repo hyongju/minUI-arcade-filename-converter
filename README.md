@@ -1,5 +1,9 @@
 ## miniUI-arcade-filename-converter
- 
+
+### Why do you need this?
+- In miniUI (this applies to RG35XX, but I believe it will work for miyoo mini as well), Arcade roms are displayed by the rom names instead of the name of the game itself, so it is not easy to recognize the game form the rom name. This tool basically converts the list of roms into the format that will show the list of game names under miniUI. The game names are parsed from MAME DAT file.
+
+
 ### How to use
 - you need to download and place MAME DAT file in the root directory, you can download the DAT file from e.g., https://www.progettosnaps.net/dats/MAME/
 - place your arcade roms (e.g., MAME, FBNeo, neogeo, etc) under your rom folder; you can choose your name e.g., ```roms/mame``` or ```roms/neogeo```
