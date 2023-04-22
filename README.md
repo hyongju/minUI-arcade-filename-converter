@@ -5,9 +5,9 @@
 
 
 ### How to use
-- you need to download and place MAME DAT file in the root directory, you can download the DAT file from e.g., https://www.progettosnaps.net/dats/MAME/
-- place your arcade roms (e.g., MAME, FBNeo, neogeo, etc) under your rom folder; you can choose your name e.g., ```roms/mame``` or ```roms/neogeo```
-- Install necessary packages using pip, e.g., ```pip3 install -r requirements.txt```
+- you need to download and place MAME DAT file in the root directory (where the ```run.py``` file is located), you can download the DAT file from e.g., https://www.progettosnaps.net/dats/MAME/
+- place your arcade roms (e.g., MAME, FBNeo, neogeo, etc) under your rom folder; you can choose the name of the folder e.g., ```roms```, ```mame```, ```roms/mame``` or ```roms/neogeo```, etc
+- Install necessary libraries used for the script using pip, e.g., ```pip3 install -r requirements.txt```
 - Now you can run the script to process the games;
 - Usage:
   ```
