@@ -12,7 +12,6 @@
 - Usage:
   ```
   run.py -d <datfilename> -r <romfoldername>
-
   ```
 - Example:
   ```
