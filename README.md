@@ -20,6 +20,7 @@
 
 ### Example output
 - As you can see, a folder is generated with the game name that will be shown in miniUI game list along with m3u and origin zipped rom file
+
   ![image](https://user-images.githubusercontent.com/1568391/233762894-014c3567-fcf7-4f88-891f-9121371c0eca.png)
 
 ### Please contact me for any bugs.
