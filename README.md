@@ -1,6 +1,6 @@
 ## minUI-arcade-filename-converter
 
-![IMG_0688](https://user-images.githubusercontent.com/1568391/233839529-4f9a749b-cf3c-4831-b3dd-ce3603585c51.jpg)
+![IMG_0688](https://user-images.githubusercontent.com/1568391/233839529-4f9a749b-cf3c-4831-b3dd-ce3603585c51.jpg | width=100)
 
 
 ### Why do you need this?
