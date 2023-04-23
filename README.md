@@ -1,5 +1,8 @@
 ## minUI-arcade-filename-converter
 
+![IMG_0688](https://user-images.githubusercontent.com/1568391/233839529-4f9a749b-cf3c-4831-b3dd-ce3603585c51.jpg)
+
+
 ### Why do you need this?
 - In minUI (this applies to RG35XX, but I believe it will work for miyoo mini as well), Arcade roms are displayed by the rom names instead of the name of the game itself, so it is not easy to recognize the game from the rom name. This tool basically converts the list of roms into the format that will show the list of game names under minUI. The game names are parsed from MAME DAT file.
 
@@ -7,7 +10,7 @@
 ### How to use
 - Download (https://www.python.org/downloads/) and install python 
 - You also need to download and place MAME DAT file in the root directory (where the ```run.py``` file is located), you can download the DAT file from e.g., https://www.progettosnaps.net/dats/MAME/, 
-> Note: for neogeo, you need to download the bios file, ```neogeo.zip``` and place in the root directory as well
+  > Note: for neogeo, you need to download the bios file, ```neogeo.zip``` and place in the root directory as well
 - place your arcade roms (e.g., MAME, FBNeo, neogeo, etc) under your rom folder; you can choose the name of the folder e.g., ```roms```, ```mame```, ```neogeo```,```cps2``` ```roms/mame``` or ```roms/neogeo```, etc
 - Open cmd and install necessary libraries used for the script using pip, e.g., ```pip install -r requirements.txt```
 - Now you can run the script to process the games;
