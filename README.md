@@ -8,20 +8,18 @@
 
 
 ### How to use
-- Download and unzip this repo https://github.com/hyongju/minUI-arcade-filename-converter/archive/refs/heads/main.zip 
-- Download (https://www.python.org/downloads/) and install python 
-- Download and place MAME DAT file in the root directory (where the ```run.py``` file is located), you can download the DAT file from e.g., https://www.progettosnaps.net/dats/MAME/, 
+- Download ```run.exe``` from the release page
+- Download and place MAME DAT file and place it where the ```run.exe``` file is located--you can download the DAT file from e.g., https://www.progettosnaps.net/dats/MAME/, 
   > Note: for neogeo, you need to download the bios file, ```neogeo.zip``` and place in the root directory as well
 - create and place your arcade roms (e.g., MAME, FBNeo, neogeo, etc) under your rom folder; you can choose the name of the folder e.g., ```roms```, ```mame```, ```neogeo```,```cps2``` ```roms/mame``` or ```roms/neogeo```, etc (this rom folder should be under directory where you unzipped the ```run.py```)
-- Open CMD or PowerShell and install necessary libraries used for the script using pip, e.g., ```pip install -r requirements.txt```
-- Now you can run the script to process the games;
+- Now you are ready to process the games;
 - Usage:
   ```
-  run.py -d <datfilename> -r <romfoldername>
+  run -d <datfilename> -r <romfoldername>
   ```
 - Example of usage:
   ```
-  python run.py -d MAME_ROMs_253.dat -r roms/neogeo
+  run -d MAME_ROMs_253.dat -r roms/neogeo
   ```
 - A new feature added: if you place ```neogeo.zip``` in the root directory and the roms directory name contains the string ```neogeo``` the neogeo bios will be copied into the sub folder which is required to run the neo-geo games 
 
