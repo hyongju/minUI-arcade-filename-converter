@@ -4,7 +4,7 @@
 <img src="https://user-images.githubusercontent.com/1568391/233839529-4f9a749b-cf3c-4831-b3dd-ce3603585c51.jpg" width="400" />
 
 ### Why do you need this?
-- In minUI (this applies to RG35XX, but I believe it will work for miyoo mini as well), Arcade roms are displayed by the rom name (e.g., sf2) instead of the name of the game (e.g., Street Fighter II The World Warrior (World 910522)) itself, so it is not easy to recognize the game from the rom name. This tool basically converts the list of roms into the format that will show the list of game names under minUI. The game names are parsed from MAME DAT file.
+- In minUI (this applies to RG35XX, but I believe it will work for miyoo mini as well), Arcade roms are displayed by the rom name (e.g., ```sf2```) instead of the name of the game (e.g., ```Street Fighter II The World Warrior (World 910522)```) itself, so it is not easy to recognize the game from the rom name. This tool basically converts the list of roms into the format that will show the list of game names under minUI. The game names are parsed from MAME DAT file.
 
 
 ### How to use
