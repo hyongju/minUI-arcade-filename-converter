@@ -12,14 +12,14 @@
 - Download and place MAME DAT file and place it where the ```run.exe``` file is located--you can download the DAT file from e.g., https://www.progettosnaps.net/dats/MAME/, 
   > Note: for neogeo, you need to download the bios file, ```neogeo.zip``` and place in the root directory as well
 - create and place your arcade roms (e.g., MAME, FBNeo, neogeo, etc) under your rom folder; you can choose the name of the folder e.g., ```roms```, ```mame```, ```neogeo```,```cps2``` ```roms/mame``` or ```roms/neogeo```, etc (this rom folder should be under directory where you unzipped the ```run.py```)
-- Now you are ready to process the games;
+- Now you are ready to process the games, open cmd go to the location where ```run.exe``` exists
 - Usage:
   ```
-  run -d <datfilename> -r <romfoldername>
+  run.exe -d <datfilename> -r <romfoldername>
   ```
 - Example of usage:
   ```
-  run -d MAME_ROMs_253.dat -r roms/neogeo
+  run.exe -d MAME_ROMs_253.dat -r roms/neogeo
   ```
 - A new feature added: if you place ```neogeo.zip``` in the root directory and the roms directory name contains the string ```neogeo``` the neogeo bios will be copied into the sub folder which is required to run the neo-geo games 
 
