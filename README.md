@@ -1,7 +1,7 @@
-## miniUI-arcade-filename-converter
+## minUI-arcade-filename-converter
 
 ### Why do you need this?
-- In miniUI (this applies to RG35XX, but I believe it will work for miyoo mini as well), Arcade roms are displayed by the rom names instead of the name of the game itself, so it is not easy to recognize the game form the rom name. This tool basically converts the list of roms into the format that will show the list of game names under miniUI. The game names are parsed from MAME DAT file.
+- In minUI (this applies to RG35XX, but I believe it will work for miyoo mini as well), Arcade roms are displayed by the rom names instead of the name of the game itself, so it is not easy to recognize the game form the rom name. This tool basically converts the list of roms into the format that will show the list of game names under minUI. The game names are parsed from MAME DAT file.
 
 
 ### How to use
@@ -20,7 +20,7 @@
 - A new feature added: if you place ```neogeo.zip``` in the root directory and the roms directory name contains the string ```neogeo``` the neogeo bios will be copied into the sub folder which is required to run the neo-geo games 
 
 ### Example output
-- As you can see, a folder is generated with the game name that will be shown in miniUI game list along with m3u and origin zipped rom file
+- As you can see, a folder is generated with the game name that will be shown in minUI game list along with m3u and origin zipped rom file
 
 ![img.png](img.png)
 
