@@ -20,7 +20,7 @@ def main(argv):
     opts, args = getopt.getopt(argv, "hd:r:", ["datfilename=", "romfoldername="])
     for opt, arg in opts:
         if opt == '-h':
-            print('run.py -d <datfilename> -r <romfoldername>')
+            print('run.exe -d <datfilename> -r <romfoldername>')
             sys.exit()
         elif opt in ("-d", "--datfilename"):
             mame_dat_file_name = arg
