@@ -6,8 +6,9 @@
 
 ### How to use
 - Download (https://www.python.org/downloads/) and install python 
-- You also need to download and place MAME DAT file in the root directory (where the ```run.py``` file is located), you can download the DAT file from e.g., https://www.progettosnaps.net/dats/MAME/
-- place your arcade roms (e.g., MAME, FBNeo, neogeo, etc) under your rom folder; you can choose the name of the folder e.g., ```roms```, ```mame```, ```roms/mame``` or ```roms/neogeo```, etc
+- You also need to download and place MAME DAT file in the root directory (where the ```run.py``` file is located), you can download the DAT file from e.g., https://www.progettosnaps.net/dats/MAME/, 
+> Note: for neogeo, you need to download the bios file, ```neogeo.zip``` and place in the root directory as well
+- place your arcade roms (e.g., MAME, FBNeo, neogeo, etc) under your rom folder; you can choose the name of the folder e.g., ```roms```, ```mame```, ```neogeo```,```cps2``` ```roms/mame``` or ```roms/neogeo```, etc
 - Open cmd and install necessary libraries used for the script using pip, e.g., ```pip install -r requirements.txt```
 - Now you can run the script to process the games;
 - Usage:
