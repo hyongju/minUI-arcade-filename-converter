@@ -29,4 +29,11 @@
 ![img.png](img.png)
 
 
+### How to generate executable
+```commandline
+pyinstaller --onefile run.py
+```
+
 ### Please contact me for any bugs.
+
+

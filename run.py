@@ -62,10 +62,10 @@ def main(argv):
             # print('counter:' + str(count))
             game_name = df['game_name'][df['rom_name'].eq(actual_filename)].tolist()[0]
             # print(game_name)
-            exclusions = ['/', ':', '-', '?', '*']
+            exclusions = ['/', ':', '-', '?', '*','\'']
             new_game_name = ''.join(ch for ch in game_name if ch not in exclusions)
-            print(new_game_name)
-            dst_name = new_game_name
+            dst_name = new_game_name[:25]
+
 
             try:
                 os.mkdir(f'{game_folder_name}/{dst_name}')
