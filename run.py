@@ -65,7 +65,8 @@ def main(argv):
             # print(game_name)
             exclusions = ['/', ':', '-', '?', '*','\'']
             new_game_name = ''.join(ch for ch in game_name if ch not in exclusions)
-            new_game_name_splited = new_game_name.split('(')[0].strip()
+            # new_game_name_splited = new_game_name.split('(')[0].strip()
+            new_game_name_splited = new_game_name
             if len(new_game_name_splited) > 25:
                 new_game_words = new_game_name_splited.split()
                 num_words = len(new_game_words)
