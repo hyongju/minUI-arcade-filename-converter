@@ -65,22 +65,18 @@ def main(argv):
             # print(game_name)
             exclusions = ['/', ':', '-', '?', '*','\'']
             new_game_name = ''.join(ch for ch in game_name if ch not in exclusions)
-            # new_game_name_splited = new_game_name.split('(')[0].strip()
-            new_game_name_splited = new_game_name
-            if len(new_game_name_splited) > 25:
-                new_game_words = new_game_name_splited.split()
-                num_words = len(new_game_words)
-                cur_words = new_game_name_splited
-                while len(cur_words) > 25:
-                    cur_words = ' '.join(word for word in new_game_words[:num_words])
-                    num_words = num_words-1
-                new_game_name_splited = cur_words
-                #
-                #
-                #
-                # adjust_num_words = min(3,len(new_game_words))
-                # dst_name = new_game_name[:25]
-            dst_name = new_game_name_splited
+            dst_name = new_game_name
+            if is_neogeo:
+                new_game_name_splited = new_game_name.split('(')[0].strip()
+                if len(new_game_name_splited) > 25:
+                    new_game_words = new_game_name_splited.split()
+                    num_words = len(new_game_words)
+                    cur_words = new_game_name_splited
+                    while len(cur_words) > 25:
+                        cur_words = ' '.join(word for word in new_game_words[:num_words])
+                        num_words = num_words-1
+                    new_game_name_splited = cur_words
+                dst_name = new_game_name_splited
 
             try:
                 os.mkdir(f'{game_folder_name}/{dst_name}')
