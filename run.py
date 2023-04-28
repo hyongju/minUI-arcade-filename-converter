@@ -76,7 +76,7 @@ def main(argv):
                         cur_words = ' '.join(word for word in new_game_words[:num_words])
                         num_words = num_words-1
                     new_game_name_splited = cur_words
-                dst_name = new_game_name_splited
+                dst_name = " ".join(new_game_name_splited.split())
 
             try:
                 os.mkdir(f'{game_folder_name}/{dst_name}')
