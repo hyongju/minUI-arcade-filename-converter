@@ -58,7 +58,7 @@ def main(argv):
             file_extension = filename.split('.')[1]
 
         # if (df['rom_name'].eq(actual_filename)).any() and file_extension == 'zip' and filename not in excluded_files:
-        if (df['rom_name'].eq(actual_filename)).any() and file_extension == 'zip':
+        if (df['rom_name'].eq(actual_filename)).any() and (file_extension == 'zip' or file_extension == '7z'):
             cnt = cnt+1
             # print('counter:' + str(count))
             game_name = df['game_name'][df['rom_name'].eq(actual_filename)].tolist()[0]
