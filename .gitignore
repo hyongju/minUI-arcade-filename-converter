@@ -7,3 +7,5 @@ roms
 mame
 venv
 roms
+.venv
+build
