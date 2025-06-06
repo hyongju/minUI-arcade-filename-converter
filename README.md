@@ -35,5 +35,6 @@ pyinstaller --onefile run.py
 ```
 
 ### Please contact me for any bugs.
+- fixed https://github.com/hyongju/minUI-arcade-filename-converter/commit/1a881d432380494aec117f3f53dba288966b0de8
 
 
