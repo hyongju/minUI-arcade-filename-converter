@@ -1,196 +1,220 @@
-# Python 3 code to rename multiple
-# files in a directory or folder
-
-# importing os module
 import os
 import sys, getopt
 import pandas as pd
 import xml.etree.ElementTree as ET
 import shutil
-
-# game_folder_name = "mame"  # in this folder you can put rom files
-# mame_dat_file_name = 'MAME_ROMs_253.dat'  # must be placed in the root folder
-# excluded_files = ['neogeo.zip'] # This was commented out, kept as is.
+import difflib
 
 def main(argv):
     mame_dat_file_name = ''
     game_folder_name = ''
+    force_neogeo = False
 
+    # 1. Update Argument Parsing to include 'n' / 'neogeo'
     try:
-        opts, args = getopt.getopt(argv, "hd:r:", ["datfilename=", "romfoldername="])
+        opts, args = getopt.getopt(argv, "hd:r:n", ["datfilename=", "romfoldername=", "neogeo"])
     except getopt.GetoptError:
-        print('Usage: run.exe -d <datfilename> -r <romfoldername>')
+        print('Usage: run.exe -d <datfilename> -r <romfoldername> [--neogeo]')
         sys.exit(2)
         
     for opt, arg in opts:
         if opt == '-h':
-            print('Usage: run.exe -d <datfilename> -r <romfoldername>')
+            print('Usage: run.exe -d <datfilename> -r <romfoldername> [--neogeo]')
             sys.exit()
         elif opt in ("-d", "--datfilename"):
             mame_dat_file_name = arg
         elif opt in ("-r", "--romfoldername"):
             game_folder_name = arg
+        elif opt in ("-n", "--neogeo"):
+            force_neogeo = True
             
     if not mame_dat_file_name or not game_folder_name:
         print('Error: Both DAT filename and ROM folder name are required.')
-        print('Usage: run.exe -d <datfilename> -r <romfoldername>')
         sys.exit(2)
 
     print('MAME DAT filename is ', mame_dat_file_name)
     print('Rom folder name is ', game_folder_name)
     
+    # 2. Determine is_neogeo based on folder name OR the flag
     is_neogeo = False
-    if 'neogeo' in game_folder_name.lower(): # Make check case-insensitive
+    if 'neogeo' in game_folder_name.lower() or force_neogeo:
         is_neogeo = True
-        
-    neogeo_bios_name = 'neogeo.zip'
-    # Check for neogeo.zip in the script's current directory or a more robust path if needed
-    has_neogeo_bios = os.path.isfile(neogeo_bios_name) 
-    if is_neogeo and not has_neogeo_bios:
-        print(f"Warning: Neo Geo folder detected, but '{neogeo_bios_name}' not found in the script's directory.")
+        print("Neo Geo Mode: ENABLED")
 
+    neogeo_bios_name = 'neogeo.zip'
+    # Expects neogeo.zip to be in the same folder where you run the script
+    has_neogeo_bios = os.path.isfile(neogeo_bios_name) 
+    
+    if is_neogeo and not has_neogeo_bios:
+        print(f"Warning: Neo Geo mode is on, but '{neogeo_bios_name}' not found in script directory.")
+        print("Bios files will NOT be copied.")
+
+    # Parse DAT File
     try:
         tree = ET.parse(mame_dat_file_name)
     except FileNotFoundError:
         print(f"Error: DAT file '{mame_dat_file_name}' not found.")
         sys.exit(1)
-    except ET.ParseError:
-        print(f"Error: Could not parse DAT file '{mame_dat_file_name}'. It might be corrupted or not valid XML.")
+    except Exception as e:
+        print(f"Error parsing XML: {e}")
         sys.exit(1)
         
     root = tree.getroot()
     game_list = []
     
     for machine in root.findall('machine'):
-        rom_name = machine.get('name') # Robust way to get 'name' attribute
-        if not rom_name:
-            # print("Warning: Found a <machine> tag without a 'name' attribute. Skipping.")
-            continue
+        rom_name = machine.get('name')
+        if not rom_name: continue
 
         description_element = machine.find('description')
         if description_element is not None and description_element.text is not None:
-            description = description_element.text.strip() # Get text and strip whitespace
-            if description: # Ensure description is not empty after stripping
+            description = description_element.text.strip()
+            if description:
                 game_list.append([rom_name, description])
-            # else:
-                # print(f"Warning: Machine '{rom_name}' has an empty description. Skipping.")
-        # else:
-            # print(f"Warning: Machine '{rom_name}' has no <description> tag or text. Skipping.")
 
     if not game_list:
-        print("No game data parsed from DAT file. Exiting.")
+        print("No game data parsed. Exiting.")
         sys.exit(1)
 
     df = pd.DataFrame(columns=['rom_name', 'game_name'], data=game_list)
-    # df.to_csv('parsed_game_list.csv',index=False) # Kept commented
+    df['rom_name'] = df['rom_name'].astype(str) # Ensure string for comparison
     
     cnt = 0
     if not os.path.isdir(game_folder_name):
-        print(f"Error: ROM folder '{game_folder_name}' not found or is not a directory.")
+        print(f"Error: ROM folder '{game_folder_name}' not found.")
         sys.exit(1)
 
     processed_files_count = 0
-    for item_name in os.listdir(game_folder_name):
-        # Original script printed count for every item, now let's refine this
-        # print(count) # This referred to enumerate before, now we manage a different counter
+    matcher = difflib.SequenceMatcher(None)
 
+    # --- MAIN PROCESSING LOOP ---
+    for item_name in os.listdir(game_folder_name):
         item_path = os.path.join(game_folder_name, item_name)
 
-        # Process only files
         if not os.path.isfile(item_path):
-            # print(f"Skipping directory or non-file: {item_name}")
             continue
         
-        # Robust way to get filename (without extension) and extension
         actual_filename, file_extension_with_dot = os.path.splitext(item_name)
-        file_extension = file_extension_with_dot[1:].lower() # Get extension without dot, and lowercase for comparison
+        file_extension = file_extension_with_dot[1:].lower()
 
-        # The original script used 'filename' for the full name with extension (item_name here)
-        # src = f"{game_folder_name}/{item_name}" # This is equivalent to item_path
+        if file_extension not in ['zip', '7z']:
+            continue
 
-        # Original logic based on 'filename' (which is item_name here)
-        # if (df['rom_name'].eq(actual_filename)).any() and filename not in excluded_files: # excluded_files is commented out
-        if (df['rom_name'].eq(actual_filename)).any() and (file_extension == 'zip' or file_extension == '7z'):
-            processed_files_count +=1
-            print(f"Processing file {processed_files_count}: {item_name}")
+        # Skip the bios file itself if it's sitting in the rom folder
+        if item_name.lower() == neogeo_bios_name.lower():
+            continue
 
-            game_name_series = df['game_name'][df['rom_name'].eq(actual_filename)]
-            if game_name_series.empty:
-                # print(f"Warning: No game name found for ROM '{actual_filename}', though it was in DAT. Skipping.")
+        # --- MATCHING LOGIC (Exact -> Fuzzy 80%) ---
+        game_name = None
+        match_type = None
+
+        # 1. Exact Match
+        exact_matches = df[df['rom_name'] == actual_filename]
+        if not exact_matches.empty:
+            best_match = exact_matches.iloc[0]
+            game_name = best_match['game_name']
+            match_type = "Exact"
+        else:
+            # 2. Fuzzy Match (Fallback)
+            def get_similarity(rom_val):
+                matcher.set_seq1(rom_val)
+                matcher.set_seq2(actual_filename)
+                return matcher.ratio()
+
+            scores = df['rom_name'].apply(get_similarity)
+            potential_matches = scores[scores >= 0.8]
+
+            if not potential_matches.empty:
+                best_match_idx = potential_matches.idxmax()
+                game_name = df.loc[best_match_idx, 'game_name']
+                match_type = f"Fuzzy ({potential_matches[best_match_idx]:.0%})"
+
+        if game_name is None:
+            continue
+
+        processed_files_count += 1
+        print(f"Processing {processed_files_count}: '{item_name}' -> '{game_name}' [{match_type}]")
+
+        # Clean Name
+        exclusions = ['/', ':', '-', '?', '*', '\''] 
+        invalid_path_chars = ['<', '>', '"', '\\', '|'] 
+        all_exclusions = list(set(exclusions + invalid_path_chars))
+
+        new_game_name = ''.join(ch for ch in game_name if ch not in all_exclusions)
+        dst_name_base = new_game_name.strip()
+
+        if not dst_name_base: dst_name_base = actual_filename
+
+        # NeoGeo Name Shortening
+        if is_neogeo:
+            new_game_name_splited = dst_name_base.split('(')[0].strip()
+            if len(new_game_name_splited) > 25:
+                new_game_words = new_game_name_splited.split()
+                temp_name = new_game_name_splited
+                while len(temp_name) > 25 and len(new_game_words) > 1:
+                    new_game_words.pop()
+                    temp_name = ' '.join(new_game_words)
+                if len(temp_name) > 25: temp_name = temp_name[:25]
+                new_game_name_splited = temp_name.strip()
+
+            dst_name_base = " ".join(new_game_name_splited.split())
+            if not dst_name_base: dst_name_base = actual_filename[:25]
+
+        target_dir_path = os.path.join(game_folder_name, dst_name_base)
+        
+        try:
+            os.makedirs(target_dir_path, exist_ok=True)
+            
+            # Move File
+            dst_path = os.path.join(target_dir_path, item_name)
+            shutil.move(item_path, dst_path)
+            
+            # Create M3U
+            m3u_filename_base = ''.join(ch for ch in dst_name_base if ch not in all_exclusions).strip()
+            if not m3u_filename_base: m3u_filename_base = actual_filename
+            m3u_file_path = os.path.join(target_dir_path, f"{m3u_filename_base}.m3u")
+            
+            with open(m3u_file_path, "w+") as f:
+                f.write(item_name)
+            
+            cnt += 1
+        except Exception as e:
+            print(f"Error processing {item_name}: {e}")
+
+    print(f'Moved and renamed {cnt} game files.')
+
+    # --- BIOS CHECK & DISTRIBUTION LOOP ---
+    # This runs after all files have been moved to ensure every folder is compliant
+    if is_neogeo and has_neogeo_bios:
+        print("\n--- Verifying Neo Geo BIOS in subfolders ---")
+        bios_copy_count = 0
+        
+        # Iterate over all directories inside the game folder
+        for folder_name in os.listdir(game_folder_name):
+            folder_path = os.path.join(game_folder_name, folder_name)
+            
+            if not os.path.isdir(folder_path):
                 continue
+                
+            # List files in the subfolder
+            files_in_sub = os.listdir(folder_path)
             
-            game_name = game_name_series.tolist()[0]
+            # Check conditions
+            # 1. Contains a Zip or 7z
+            has_rom = any(f.lower().endswith(('.zip', '.7z')) for f in files_in_sub)
+            # 2. Contains an M3U
+            has_m3u = any(f.lower().endswith('.m3u') for f in files_in_sub)
+            # 3. Does NOT contain neogeo.zip
+            has_bios_in_sub = neogeo_bios_name in files_in_sub
             
-            exclusions = ['/', ':', '-', '?', '*', '\''] # As per original script
-            # Also remove characters invalid for directory names on Windows/Linux
-            # Windows: < > : " / \ | ? *
-            # Linux: / and null character
-            # A more comprehensive exclusion list or a slugify function might be better
-            # For now, keeping original exclusions + a few more common ones for paths
-            invalid_path_chars = ['<', '>', '"', '\\', '|'] 
-            all_exclusions = list(set(exclusions + invalid_path_chars)) # Combine and remove duplicates
-
-            new_game_name = ''.join(ch for ch in game_name if ch not in all_exclusions)
-            dst_name_base = new_game_name.strip() # Remove any leading/trailing spaces from cleaned name
-
-            if not dst_name_base: # If game name becomes empty after stripping exclusions
-                print(f"Warning: Game name for '{item_name}' became empty after cleaning. Using ROM name '{actual_filename}' instead.")
-                dst_name_base = actual_filename
-
-            if is_neogeo:
-                new_game_name_splited = dst_name_base.split('(')[0].strip()
-                if len(new_game_name_splited) > 25:
-                    new_game_words = new_game_name_splited.split()
-                    # Truncate progressively
-                    temp_name = new_game_name_splited
-                    while len(temp_name) > 25 and len(new_game_words) > 1:
-                        new_game_words.pop() # Remove the last word
-                        temp_name = ' '.join(new_game_words)
+            if has_rom and has_m3u and not has_bios_in_sub:
+                try:
+                    shutil.copy(neogeo_bios_name, os.path.join(folder_path, neogeo_bios_name))
+                    bios_copy_count += 1
+                except Exception as e:
+                    print(f"Failed to copy BIOS to {folder_name}: {e}")
                     
-                    # If even one word is > 25, truncate that word
-                    if len(temp_name) > 25:
-                        temp_name = temp_name[:25]
-                    
-                    new_game_name_splited = temp_name.strip()
-
-                dst_name_base = " ".join(new_game_name_splited.split()) # Normalize spaces
-                if not dst_name_base: # Fallback if name becomes empty after truncation
-                     dst_name_base = actual_filename[:25]
-
-
-            # Ensure dst_name_base is not empty
-            if not dst_name_base:
-                print(f"Warning: Destination folder name for '{item_name}' is empty. Using ROM name '{actual_filename}'.")
-                dst_name_base = actual_filename
-
-
-            target_dir_path = os.path.join(game_folder_name, dst_name_base)
-            
-            try:
-                os.makedirs(target_dir_path, exist_ok=True) # Use makedirs with exist_ok=True
-                
-                dst_path = os.path.join(target_dir_path, item_name)
-                shutil.move(item_path, dst_path)
-                
-                if is_neogeo and has_neogeo_bios:
-                    shutil.copy(neogeo_bios_name, os.path.join(target_dir_path, neogeo_bios_name))
-                
-                # M3U filename should also be cleaned
-                m3u_filename_base = ''.join(ch for ch in dst_name_base if ch not in all_exclusions).strip()
-                if not m3u_filename_base: # Fallback if m3u base name is empty
-                    m3u_filename_base = actual_filename
-
-                m3u_file_path = os.path.join(target_dir_path, f"{m3u_filename_base}.m3u")
-                with open(m3u_file_path, "w+") as f:
-                    f.write(item_name) # Write the original ROM filename
-                
-                cnt += 1 # Count successfully processed games
-            except OSError as error:
-                print(f"OSError for {item_name}: {error}")
-            except Exception as e:
-                print(f"An unexpected error occurred while processing {item_name}: {e}")
-
-    print(f'Processed {cnt} game files!')
+        print(f"Distributed neogeo.zip to {bios_copy_count} folders.")
 
 if __name__ == '__main__':
     main(sys.argv[1:])
