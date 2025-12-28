@@ -5,12 +5,85 @@ import xml.etree.ElementTree as ET
 import shutil
 import difflib
 
+def sanitize_text(text):
+    """
+    Splits by ANY whitespace and joins with single space.
+    Removes double spaces, tabs, and leading/trailing whitespace.
+    """
+    return " ".join(text.split())
+
+def cleanup_filesystem(root_folder):
+    """
+    Recursively scans ALL folders and files to fix naming issues.
+    Uses bottom-up walk to safely rename children before parents.
+    """
+    print(f"\n--- Starting Cleanup Scan in: {root_folder} ---")
+    renamed_count = 0
+    
+    # topdown=False is CRITICAL. It ensures we visit files/subfolders 
+    # BEFORE we visit the parent folder that contains them.
+    # This prevents path errors when renaming directories.
+    for current_root, dirs, files in os.walk(root_folder, topdown=False):
+        
+        # 1. Fix Files
+        for filename in files:
+            # Skip hidden files or system files if necessary, or just process all
+            clean_name = sanitize_text(filename)
+            
+            if clean_name != filename:
+                src = os.path.join(current_root, filename)
+                dst = os.path.join(current_root, clean_name)
+                
+                try:
+                    if not os.path.exists(dst):
+                        os.rename(src, dst)
+                        print(f"[Fix File] '{filename}' -> '{clean_name}'")
+                        renamed_count += 1
+                    else:
+                        print(f"[Skip File] Target '{clean_name}' already exists.")
+                except OSError as e:
+                    print(f"Error renaming file {filename}: {e}")
+
+        # 2. Fix Directories
+        for dirname in dirs:
+            clean_name = sanitize_text(dirname)
+            
+            if clean_name != dirname:
+                src = os.path.join(current_root, dirname)
+                dst = os.path.join(current_root, clean_name)
+                
+                try:
+                    if os.path.exists(dst):
+                        # Merge Case: Target folder already exists.
+                        # We must move contents from Bad -> Good, then delete Bad.
+                        print(f"[Merging] '{dirname}' contents into '{clean_name}'")
+                        for sub_item in os.listdir(src):
+                            s_item = os.path.join(src, sub_item)
+                            d_item = os.path.join(dst, sub_item)
+                            if not os.path.exists(d_item):
+                                shutil.move(s_item, d_item)
+                        
+                        # Try to remove the now-empty source directory
+                        try:
+                            os.rmdir(src)
+                            renamed_count += 1
+                        except OSError:
+                            print(f"[Warning] Could not remove '{dirname}' after merge. Is it empty?")
+                    else:
+                        # Simple Rename Case
+                        os.rename(src, dst)
+                        print(f"[Fix Folder] '{dirname}' -> '{clean_name}'")
+                        renamed_count += 1
+                except OSError as e:
+                    print(f"Error renaming folder {dirname}: {e}")
+
+    print(f"--- Cleanup Complete. Fixed {renamed_count} items. ---\n")
+
 def main(argv):
     mame_dat_file_name = ''
     game_folder_name = ''
     force_neogeo = False
 
-    # 1. Update Argument Parsing to include 'n' / 'neogeo'
     try:
         opts, args = getopt.getopt(argv, "hd:r:n", ["datfilename=", "romfoldername=", "neogeo"])
     except getopt.GetoptError:
@@ -32,17 +105,22 @@ def main(argv):
         print('Error: Both DAT filename and ROM folder name are required.')
         sys.exit(2)
 
+    if not os.path.isdir(game_folder_name):
+        print(f"Error: ROM folder '{game_folder_name}' not found.")
+        sys.exit(1)
+
     print('MAME DAT filename is ', mame_dat_file_name)
     print('Rom folder name is ', game_folder_name)
     
-    # 2. Determine is_neogeo based on folder name OR the flag
+    # --- RUN CLEANUP BEFORE ANYTHING ELSE ---
+    cleanup_filesystem(game_folder_name)
+    
     is_neogeo = False
     if 'neogeo' in game_folder_name.lower() or force_neogeo:
         is_neogeo = True
         print("Neo Geo Mode: ENABLED")
 
     neogeo_bios_name = 'neogeo.zip'
-    # Expects neogeo.zip to be in the same folder where you run the script
     has_neogeo_bios = os.path.isfile(neogeo_bios_name) 
     
     if is_neogeo and not has_neogeo_bios:
@@ -77,20 +155,18 @@ def main(argv):
         sys.exit(1)
 
     df = pd.DataFrame(columns=['rom_name', 'game_name'], data=game_list)
-    df['rom_name'] = df['rom_name'].astype(str) # Ensure string for comparison
+    df['rom_name'] = df['rom_name'].astype(str)
     
     cnt = 0
-    if not os.path.isdir(game_folder_name):
-        print(f"Error: ROM folder '{game_folder_name}' not found.")
-        sys.exit(1)
-
     processed_files_count = 0
     matcher = difflib.SequenceMatcher(None)
 
-    # --- MAIN PROCESSING LOOP ---
+    # --- MAIN PROCESSING LOOP (Moves files from root -> subfolders) ---
+    print("\n--- Starting Main Organization ---")
     for item_name in os.listdir(game_folder_name):
         item_path = os.path.join(game_folder_name, item_name)
 
+        # Skip directories (folders are handled by cleanup, or already organized)
         if not os.path.isfile(item_path):
             continue
         
@@ -100,22 +176,19 @@ def main(argv):
         if file_extension not in ['zip', '7z']:
             continue
 
-        # Skip the bios file itself if it's sitting in the rom folder
         if item_name.lower() == neogeo_bios_name.lower():
             continue
 
-        # --- MATCHING LOGIC (Exact -> Fuzzy 80%) ---
+        # --- MATCHING LOGIC ---
         game_name = None
         match_type = None
 
-        # 1. Exact Match
         exact_matches = df[df['rom_name'] == actual_filename]
         if not exact_matches.empty:
             best_match = exact_matches.iloc[0]
             game_name = best_match['game_name']
             match_type = "Exact"
         else:
-            # 2. Fuzzy Match (Fallback)
             def get_similarity(rom_val):
                 matcher.set_seq1(rom_val)
                 matcher.set_seq2(actual_filename)
@@ -135,17 +208,19 @@ def main(argv):
         processed_files_count += 1
         print(f"Processing {processed_files_count}: '{item_name}' -> '{game_name}' [{match_type}]")
 
-        # Clean Name
+        # Clean Name & Sanitize Spaces
         exclusions = ['/', ':', '-', '?', '*', '\''] 
         invalid_path_chars = ['<', '>', '"', '\\', '|'] 
         all_exclusions = list(set(exclusions + invalid_path_chars))
 
         new_game_name = ''.join(ch for ch in game_name if ch not in all_exclusions)
-        dst_name_base = new_game_name.strip()
+        
+        # Ensure single spaces for the NEW folder we are about to create
+        dst_name_base = sanitize_text(new_game_name)
 
-        if not dst_name_base: dst_name_base = actual_filename
+        if not dst_name_base: 
+            dst_name_base = actual_filename
 
-        # NeoGeo Name Shortening
         if is_neogeo:
             new_game_name_splited = dst_name_base.split('(')[0].strip()
             if len(new_game_name_splited) > 25:
@@ -157,20 +232,24 @@ def main(argv):
                 if len(temp_name) > 25: temp_name = temp_name[:25]
                 new_game_name_splited = temp_name.strip()
 
-            dst_name_base = " ".join(new_game_name_splited.split())
+            dst_name_base = sanitize_text(new_game_name_splited)
             if not dst_name_base: dst_name_base = actual_filename[:25]
+
+        # Double check final folder name
+        dst_name_base = sanitize_text(dst_name_base)
 
         target_dir_path = os.path.join(game_folder_name, dst_name_base)
         
         try:
             os.makedirs(target_dir_path, exist_ok=True)
             
-            # Move File
             dst_path = os.path.join(target_dir_path, item_name)
             shutil.move(item_path, dst_path)
             
-            # Create M3U
-            m3u_filename_base = ''.join(ch for ch in dst_name_base if ch not in all_exclusions).strip()
+            # Create M3U with sanitized name
+            m3u_filename_base = ''.join(ch for ch in dst_name_base if ch not in all_exclusions)
+            m3u_filename_base = sanitize_text(m3u_filename_base)
+            
             if not m3u_filename_base: m3u_filename_base = actual_filename
             m3u_file_path = os.path.join(target_dir_path, f"{m3u_filename_base}.m3u")
             
@@ -184,27 +263,20 @@ def main(argv):
     print(f'Moved and renamed {cnt} game files.')
 
     # --- BIOS CHECK & DISTRIBUTION LOOP ---
-    # This runs after all files have been moved to ensure every folder is compliant
     if is_neogeo and has_neogeo_bios:
         print("\n--- Verifying Neo Geo BIOS in subfolders ---")
         bios_copy_count = 0
         
-        # Iterate over all directories inside the game folder
         for folder_name in os.listdir(game_folder_name):
             folder_path = os.path.join(game_folder_name, folder_name)
             
             if not os.path.isdir(folder_path):
                 continue
                 
-            # List files in the subfolder
             files_in_sub = os.listdir(folder_path)
             
-            # Check conditions
-            # 1. Contains a Zip or 7z
             has_rom = any(f.lower().endswith(('.zip', '.7z')) for f in files_in_sub)
-            # 2. Contains an M3U
             has_m3u = any(f.lower().endswith('.m3u') for f in files_in_sub)
-            # 3. Does NOT contain neogeo.zip
             has_bios_in_sub = neogeo_bios_name in files_in_sub
             
             if has_rom and has_m3u and not has_bios_in_sub:
